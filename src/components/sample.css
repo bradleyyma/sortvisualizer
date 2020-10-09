@@ -1,0 +1,25 @@
+.graph{
+    border: solid;
+    height: 80vh;
+    margin-left: 20vh;
+    margin-right: 20vh;
+    /* text-align: center; */
+    /* position: relative; */
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: flex-end;
+    justify-content: center;
+}
+
+.bar{
+    border-style: solid;
+    /* float: left; */
+    /* position: absolute;
+    bottom: 0px; */
+    background: yellow;
+}
+.compare{
+    color: green;
+    background: blue;
+}

@@ -1,105 +1,193 @@
 import React from "react";
 import "./sample.css";
+import * as helper from "./helpers.jsx";
+
 class Sample extends React.Component {
   constructor() {
     super();
     this.state = {
       length: 50,
       max: 100,
-      update_speed: 100,
+      update_speed: 10,
     };
-    this.state.sample = this.createNewSample(this.state.length, this.state.max);
+    const sample = helper.createNewSample(this.state.length, this.state.max);
+    this.state.sample = sample;
+    this.state.sorted = [...sample].sort(function (a, b) {
+      return a - b;
+    });
+    // this.state.sample = [20, 95, 42, 45, 12];
   }
 
-  createNewSample(length, max) {
-    const min = 5;
-    return Array.from({ length: length }, () =>
-      Math.floor(Math.random() * (max - min) + min)
-    );
-  }
   handleNewSample = (length, max) => {
-    let sample = this.createNewSample(length, max);
-    console.log(sample);
-    this.setState({ sample });
+    let sample = helper.createNewSample(length, max);
+    this.setState({
+      sample: sample,
+      sorted: [...sample].sort(function (a, b) {
+        return a - b;
+      }),
+    });
   };
-
-  compare(bar1, bar2, counter) {
-    //color cues for comparing
-    bar1.classList.add("compare");
-    bar2.classList.add("compare");
-  }
-
-  swap(bar1, bar2) {
-    let temp_value = bar1.dataset.value;
-    let temp_height = bar1.style.height;
-    bar1.dataset.value = bar2.dataset.value;
-    bar2.dataset.value = temp_value;
-    bar1.style.height = bar2.style.height;
-    bar2.style.height = temp_height;
-  }
-
   bubbleSort = () => {
     const update_speed = this.state.update_speed;
     let bars = document.getElementsByClassName("bar");
+    let values = [...this.state.sample];
     let len = this.state.length;
-    let counter = 1;
+    let counter = 0;
+
     for (let i = 1; i < len; i++) {
+      let flag = false;
       for (let j = 0; j < len - i; j++) {
         const b1 = bars[j];
         const b2 = bars[j + 1];
-        setTimeout(
-          () => this.compare(b1, b2, counter),
-          update_speed * counter++
-        );
-        setTimeout(() => {
-          if (parseInt(b1.dataset.value) > parseInt(b2.dataset.value)) {
-            this.swap(b1, b2);
-            counter++;
-          }
-        }, update_speed * counter);
-
+        setTimeout(() => helper.compare(b1, b2), update_speed * ++counter);
+        if (values[j] > values[j + 1]) {
+          flag = true;
+          setTimeout(() => {
+            helper.swap(b1, b2);
+          }, update_speed * ++counter);
+          let temp = values[j];
+          values[j] = values[j + 1];
+          values[j + 1] = temp;
+        }
         setTimeout(() => {
           b1.classList.remove("compare");
           // b2.classList.remove('compare');
-        }, update_speed * counter++);
+        }, update_speed * ++counter);
+      }
+      if (flag === false) {
+        return counter;
       }
     }
+    return counter;
   };
 
   insertionSort = () => {
-    const update_speed = 30;
+    const update_speed = this.state.update_speed;
     let bars = document.getElementsByClassName("bar");
-    let values = [...this.state.sample]
+    let values = [...this.state.sample];
     let len = this.state.length;
-    let counter = 1;
+    let counter = 0;
     for (let i = 1; i < len; i++) {
       for (let j = i - 1; j >= 0; j--) {
-          if(values[j+1] < values[j]){
-              const curr_bar = bars[j+1]
-              const othr_bar = bars[j]
-              setTimeout(() => {
-                this.compare(curr_bar, othr_bar);
-              }, update_speed * ++counter);
-              let tmp = values[j+1]
-              values[j+1] = values[j]
-              values[j] = tmp
-              setTimeout(() => {
-                this.swap(curr_bar, othr_bar)
-              }, update_speed * ++counter);
-          }
+        if (values[j + 1] < values[j]) {
+          let curr_bar = bars[j+1];
+          let othr_bar = bars[j];
+          setTimeout(() => {
+            helper.compare(curr_bar, othr_bar);
+          }, update_speed * ++counter);
+          let tmp = values[j + 1];
+          values[j + 1] = values[j];
+          values[j] = tmp;
+          setTimeout(() => {
+            helper.swap(curr_bar, othr_bar);
+          }, update_speed * ++counter);
+        }
       }
     }
+    return counter;
+  };
+
+  mergeSort = () => {
+    const update_speed = this.state.update_speed;
+    let bars = document.getElementsByClassName("bar");
+    let values = [...this.state.sample];
+    let counter = 0;
+
+    function mergeSortHelper(start, end) {
+      // end is non-inclusive
+      let length = end - start;
+      if (length === 1) {
+        return;
+      }
+      let half = start + Math.floor(length / 2);
+      mergeSortHelper(start, half);
+      mergeSortHelper(half, end);
+      let l = start;
+      let r = half;
+      let end_left = half;
+      let merge_index = start;
+      while (l < end_left && r < end) {
+        const barl = bars[l];
+        const barr = bars[r];
+        let height;
+        setTimeout(() => {
+          helper.compare(barl, barr);
+          height = barr.style.height;
+        }, update_speed * ++counter);
+
+        setTimeout(() => {
+          barl.classList.remove("compare");
+          barr.classList.remove("compare");
+        }, update_speed * ++counter);
+
+        if (values[l] <= values[r]) {
+          l++;
+        } else {
+          let r_value = values[r];
+          let bar1 = bars[merge_index];
+          // let height = barr.style.height
+          let update_time = update_speed * ++counter;
+          for (let i = r - 1; i >= merge_index; i--) {
+            values[i + 1] = values[i];
+            setTimeout(() => {
+              bars[i + 1].style.height = bars[i].style.height;
+            }, update_time);
+            //html shift
+          }
+
+          setTimeout(() => {
+            bar1.style.height = height;
+          }, update_time);
+
+          values[merge_index] = r_value;
+          l++;
+          end_left++;
+          r++;
+        }
+
+        merge_index++;
+      }
+      return;
+    }
+
+    mergeSortHelper(0, this.state.length);
+    console.log(values);
+    return counter;
   };
 
   handleSort = (type) => {
+    let btns = document.getElementsByClassName("sortbtn");
+    let bars = document.getElementsByClassName("bar");
+    for (let i = 0; i < btns.length; i++) {
+      btns[i].disabled = true;
+    }
+    var counter;
     switch (type) {
       case "bubble":
-        this.bubbleSort();
+        counter = this.bubbleSort();
         break;
       case "insertion":
-        this.insertionSort();
+        counter = this.insertionSort();
         break;
+      case "merge":
+        counter = this.mergeSort();
     }
+    let time_after = counter * this.state.update_speed;
+    setTimeout(() => {
+      for (let bar of bars) {
+        bar.classList.remove("compare");
+        bar.classList.add("pass");
+      }
+      setTimeout(() => {
+        for (let bar of bars) {
+          bar.classList.remove("pass");
+        }
+        for (let i = 0; i < btns.length; i++) {
+          btns[i].disabled = false;
+        }
+        this.setState({ sample: [...this.state.sorted] });
+      }, 1000);
+    }, time_after);
   };
 
   render() {
@@ -110,21 +198,31 @@ class Sample extends React.Component {
             <div
               key={index}
               className="bar"
-              style={{ height: v + "%", width: "1vh" }}
+              style={{ height: v + "%", width: 100 / this.state.length + "%" }}
               data-value={v}
+              id={index}
             ></div>
           ))}
         </div>
         <button
+          className="sortbtn"
           onClick={() =>
             this.handleNewSample(this.state.length, this.state.max)
           }
         >
           New Sample
         </button>
-        <button onClick={() => this.handleSort("bubble")}>Bubble Sort</button>
-        <button onClick={() => this.handleSort("insertion")}>
+        <button className="sortbtn" onClick={() => this.handleSort("bubble")}>
+          Bubble Sort
+        </button>
+        <button
+          className="sortbtn"
+          onClick={() => this.handleSort("insertion")}
+        >
           Insertion Sort
+        </button>
+        <button className="sortbtn" onClick={() => this.handleSort("merge")}>
+          Merge Sort
         </button>
       </React.Fragment>
     );

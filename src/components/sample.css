@@ -20,6 +20,11 @@
     background: yellow;
 }
 .compare{
-    color: green;
-    background: blue;
+    background: #008080;
+}
+.selected{
+    background: white;
+}
+.pass{
+    background: green;
 }

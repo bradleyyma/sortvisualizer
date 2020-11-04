@@ -6,7 +6,7 @@ class Sample extends React.Component {
   constructor() {
     super();
     this.state = {
-      length: 50,
+      length: 100,
       max: 100,
       update_speed: 10,
     };
@@ -70,7 +70,7 @@ class Sample extends React.Component {
     for (let i = 1; i < len; i++) {
       for (let j = i - 1; j >= 0; j--) {
         if (values[j + 1] < values[j]) {
-          let curr_bar = bars[j+1];
+          let curr_bar = bars[j + 1];
           let othr_bar = bars[j];
           setTimeout(() => {
             helper.compare(curr_bar, othr_bar);
@@ -155,6 +155,69 @@ class Sample extends React.Component {
     return counter;
   };
 
+  quickSort = () => {
+    const update_speed = this.state.update_speed;
+    let bars = document.getElementsByClassName("bar");
+    let values = [...this.state.sample];
+    let counter = 0;
+    function partition(values, bars, start, end) {
+      let pivot = values[end - 1];
+      let swap_index = start;
+      for (let j = start; j < end - 1; j++) {
+        let bar1 = bars[j];
+        let bar2 = bars[swap_index];
+        setTimeout(() => {
+          helper.compare(bar1, bar2);
+        }, ++counter * update_speed);
+        if (values[j] <= pivot) {
+          let tmp = values[j];
+          values[j] = values[swap_index];
+          values[swap_index] = tmp;
+          setTimeout(() => helper.swap(bar1, bar2), ++counter * update_speed);
+          swap_index++;
+        }
+        setTimeout(() => {
+          bar1.classList.remove("compare");
+          bar2.classList.remove("compare");
+        }, update_speed * ++counter);
+      }
+      let tmp = values[end - 1];
+      values[end - 1] = values[swap_index];
+      values[swap_index] = tmp;
+      let b1 = bars[end - 1];
+      let b2 = bars[swap_index];
+
+      setTimeout(() => {
+        helper.swap(b1, b2);
+      }, ++counter * update_speed);
+      setTimeout(() => {
+        b2.classList.add("selected");
+      }, counter * update_speed);
+      // console.log(values, pivot, start, end)
+      console.log(values);
+      return swap_index;
+    }
+    function quickSortHelper(start, end) {
+      let length = end - start;
+      if (length === 0) {
+        return;
+      }
+      if (length === 1) {
+        let bar = bars[start];
+        setTimeout(() => {
+          bar.classList.add("selected");
+        }, counter * update_speed);
+        return;
+      }
+      let pivot = partition(values, bars, start, end);
+
+      quickSortHelper(start, pivot);
+      quickSortHelper(pivot + 1, end);
+    }
+    quickSortHelper(0, this.state.length);
+    return counter;
+  };
+
   handleSort = (type) => {
     let btns = document.getElementsByClassName("sortbtn");
     let bars = document.getElementsByClassName("bar");
@@ -171,6 +234,10 @@ class Sample extends React.Component {
         break;
       case "merge":
         counter = this.mergeSort();
+        break;
+      case "quick":
+        counter = this.quickSort();
+        break;
     }
     let time_after = counter * this.state.update_speed;
     setTimeout(() => {
@@ -223,6 +290,9 @@ class Sample extends React.Component {
         </button>
         <button className="sortbtn" onClick={() => this.handleSort("merge")}>
           Merge Sort
+        </button>
+        <button className="sortbtn" onClick={() => this.handleSort("quick")}>
+          Quick Sort
         </button>
       </React.Fragment>
     );

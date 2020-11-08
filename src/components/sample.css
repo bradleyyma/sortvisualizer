@@ -1,6 +1,6 @@
 .graph{
     border: solid;
-    height: 80vh;
+    height: 75vh;
     margin-left: 20vh;
     margin-right: 20vh;
     /* text-align: center; */
@@ -10,6 +10,17 @@
     flex-wrap: nowrap;
     align-items: flex-end;
     justify-content: center;
+}
+
+.slider{
+
+
+}
+
+h1{
+    color: white;
+    background: gray;
+    margin : 0;
 }
 
 .bar{
@@ -27,4 +38,8 @@
 }
 .pass{
     background: green;
+}
+
+.final{
+    background: purple;
 }

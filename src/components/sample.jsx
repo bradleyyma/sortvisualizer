@@ -6,7 +6,7 @@ class Sample extends React.Component {
   constructor() {
     super();
     this.state = {
-      length: 100,
+      length: 70,
       max: 100,
       update_speed: 10,
     };
@@ -20,12 +20,7 @@ class Sample extends React.Component {
 
   handleNewSample = (length, max) => {
     let sample = helper.createNewSample(length, max);
-    this.setState({
-      sample: sample,
-      sorted: [...sample].sort(function (a, b) {
-        return a - b;
-      }),
-    });
+    this.setState({ sample });
   };
   bubbleSort = () => {
     const update_speed = this.state.update_speed;
@@ -39,7 +34,7 @@ class Sample extends React.Component {
       for (let j = 0; j < len - i; j++) {
         const b1 = bars[j];
         const b2 = bars[j + 1];
-        setTimeout(() => helper.compare(b1, b2), update_speed * ++counter);
+        setTimeout(() => helper.compare(b1, b2), update_speed * counter);
         if (values[j] > values[j + 1]) {
           flag = true;
           setTimeout(() => {
@@ -57,6 +52,10 @@ class Sample extends React.Component {
       if (flag === false) {
         return counter;
       }
+      let end_bar = bars[len - i];
+      setTimeout(() => {
+        end_bar.classList.add("final");
+      }, update_speed * counter);
     }
     return counter;
   };
@@ -67,13 +66,14 @@ class Sample extends React.Component {
     let values = [...this.state.sample];
     let len = this.state.length;
     let counter = 0;
-    for (let i = 1; i < len; i++) {
-      for (let j = i - 1; j >= 0; j--) {
+    for (let i = 0; i < len; i++) {
+      let j;
+      for (j = i - 1; j >= 0; j--) {
+        let curr_bar = bars[j + 1];
         if (values[j + 1] < values[j]) {
-          let curr_bar = bars[j + 1];
           let othr_bar = bars[j];
           setTimeout(() => {
-            helper.compare(curr_bar, othr_bar);
+            curr_bar.classList.add("selected");
           }, update_speed * ++counter);
           let tmp = values[j + 1];
           values[j + 1] = values[j];
@@ -81,8 +81,12 @@ class Sample extends React.Component {
           setTimeout(() => {
             helper.swap(curr_bar, othr_bar);
           }, update_speed * ++counter);
-        }
+        } else break;
       }
+      let end_bar = bars[j + 1];
+      setTimeout(() => {
+        end_bar.classList.add("final");
+      }, update_speed * counter);
     }
     return counter;
   };
@@ -114,12 +118,10 @@ class Sample extends React.Component {
           helper.compare(barl, barr);
           height = barr.style.height;
         }, update_speed * ++counter);
-
         setTimeout(() => {
           barl.classList.remove("compare");
           barr.classList.remove("compare");
         }, update_speed * ++counter);
-
         if (values[l] <= values[r]) {
           l++;
         } else {
@@ -162,6 +164,10 @@ class Sample extends React.Component {
     let counter = 0;
     function partition(values, bars, start, end) {
       let pivot = values[end - 1];
+      let pivot_bar = bars[end - 1];
+      setTimeout(() => {
+        pivot_bar.classList.add("selected");
+      }, counter * update_speed);
       let swap_index = start;
       for (let j = start; j < end - 1; j++) {
         let bar1 = bars[j];
@@ -175,24 +181,29 @@ class Sample extends React.Component {
           values[swap_index] = tmp;
           setTimeout(() => helper.swap(bar1, bar2), ++counter * update_speed);
           swap_index++;
+          setTimeout(() => {
+            bar1.classList.remove("compare");
+            bar2.classList.remove("compare");
+          }, update_speed * ++counter);
+        } else {
+          setTimeout(() => {
+            bar1.classList.remove("compare");
+          }, update_speed * ++counter);
         }
-        setTimeout(() => {
-          bar1.classList.remove("compare");
-          bar2.classList.remove("compare");
-        }, update_speed * ++counter);
       }
       let tmp = values[end - 1];
       values[end - 1] = values[swap_index];
       values[swap_index] = tmp;
-      let b1 = bars[end - 1];
+
       let b2 = bars[swap_index];
 
       setTimeout(() => {
-        helper.swap(b1, b2);
+        helper.swap(pivot_bar, b2);
       }, ++counter * update_speed);
+
       setTimeout(() => {
-        b2.classList.add("selected");
-      }, counter * update_speed);
+        b2.classList.add("final");
+      }, ++counter * update_speed);
       // console.log(values, pivot, start, end)
       console.log(values);
       return swap_index;
@@ -205,7 +216,7 @@ class Sample extends React.Component {
       if (length === 1) {
         let bar = bars[start];
         setTimeout(() => {
-          bar.classList.add("selected");
+          bar.classList.add("final");
         }, counter * update_speed);
         return;
       }
@@ -219,8 +230,11 @@ class Sample extends React.Component {
   };
 
   handleSort = (type) => {
-    let btns = document.getElementsByClassName("sortbtn");
-    let bars = document.getElementsByClassName("bar");
+    let btns = document.getElementsByClassName("menu")[0].childNodes;
+    let bars = document.getElementsByClassName("graph")[0].childNodes;
+    const sorted = [...this.state.sample].sort(function (a, b) {
+      return a - b;
+    });
     for (let i = 0; i < btns.length; i++) {
       btns[i].disabled = true;
     }
@@ -242,24 +256,37 @@ class Sample extends React.Component {
     let time_after = counter * this.state.update_speed;
     setTimeout(() => {
       for (let bar of bars) {
-        bar.classList.remove("compare");
-        bar.classList.add("pass");
+        bar.classList = "pass bar";
       }
       setTimeout(() => {
         for (let bar of bars) {
-          bar.classList.remove("pass");
+          bar.classList = "bar";
         }
         for (let i = 0; i < btns.length; i++) {
           btns[i].disabled = false;
         }
-        this.setState({ sample: [...this.state.sorted] });
+        this.setState({ sample: sorted });
       }, 1000);
     }, time_after);
   };
 
+  handleSize = (event) => {
+    const length = event.target.value;
+    const a = 1600;
+    const b = 0.94;
+    this.setState(
+      {
+        length: length,
+        sample: helper.createNewSample(length, this.state.max),
+        update_speed: a * b ** length,
+      },
+      console.log(this.state.update_speed)
+    );
+  };
   render() {
     return (
       <React.Fragment>
+        <h1>Sorting Visualizer</h1>
         <div className="graph">
           {this.state.sample.map((v, index) => (
             <div
@@ -271,29 +298,41 @@ class Sample extends React.Component {
             ></div>
           ))}
         </div>
-        <button
-          className="sortbtn"
-          onClick={() =>
-            this.handleNewSample(this.state.length, this.state.max)
-          }
-        >
-          New Sample
-        </button>
-        <button className="sortbtn" onClick={() => this.handleSort("bubble")}>
-          Bubble Sort
-        </button>
-        <button
-          className="sortbtn"
-          onClick={() => this.handleSort("insertion")}
-        >
-          Insertion Sort
-        </button>
-        <button className="sortbtn" onClick={() => this.handleSort("merge")}>
-          Merge Sort
-        </button>
-        <button className="sortbtn" onClick={() => this.handleSort("quick")}>
-          Quick Sort
-        </button>
+        <div className="menu">
+          <button
+            className="sortbtn"
+            onClick={() =>
+              this.handleNewSample(this.state.length, this.state.max)
+            }
+          >
+            New Sample
+          </button>
+          <button className="sortbtn" onClick={() => this.handleSort("bubble")}>
+            Bubble Sort
+          </button>
+          <button
+            className="sortbtn"
+            onClick={() => this.handleSort("insertion")}
+          >
+            Insertion Sort
+          </button>
+          <button className="sortbtn" onClick={() => this.handleSort("merge")}>
+            Merge Sort
+          </button>
+          <button className="sortbtn" onClick={() => this.handleSort("quick")}>
+            Quick Sort
+          </button>
+
+          <p style={{ color: "white" }}>Size/Speed</p>
+          <input
+            type="range"
+            min="5"
+            max="100"
+            value={this.state.length}
+            onChange={this.handleSize}
+            className="slider"
+          />
+        </div>
       </React.Fragment>
     );
   }

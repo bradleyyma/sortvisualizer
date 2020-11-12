@@ -13,6 +13,8 @@ export function swap(bar1, bar2) {
   bar2.style.height = tmp1.style.height;
   bar1.classList = tmp2.classList;
   bar2.classList = tmp1.classList;
+  // bar1.innerHTML = tmp2.innerHTML;
+  // bar2.innerHTML = tmp1.innerHTML;
 }
 
 export function createNewSample(length, max) {
